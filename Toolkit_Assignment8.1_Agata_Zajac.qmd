@@ -1,0 +1,126 @@
+---
+title: "Toolkit assignment 8"
+author: "Agata Zajac"
+format:
+  html:
+    self-contained: true
+editor: visual
+---
+
+### Example of the "bad plot" from the previous assignment
+
+I decided to correct the graph that illustrates election results from the 11 District Electoral Commissions (OKWs) in the Popielów Municipality. The plot I'm going to revise looks like this:
+
+![](images/wykr.jpeg)
+
+### Step 1
+
+First, I needed to load necessary libraries:
+
+```{r}
+library(ggplot2)
+library(tidyr)
+```
+
+### Step 2
+
+Then, I compiled all the election data I found online (<https://popielow.pl/9131/wyniki-wyborow-na-terenie-gminy-popielow.html>) into a structured data frame, organizing it by voting district (OKW) and political party to prepare it for visualization.
+
+```{r}
+results <- data.frame(
+  Partia = c(
+    "KW BEZPARTYJNI SAMORZĄDOWCY",
+    "KKW TRZECIA DROGA POLSKA 2050 SZYMONA HOŁOWNI - POLSKIE STRONNICTWO LUDOWE",
+    "KW NOWA LEWICA",
+    "KW PRAWO I SPRAWIEDLIWOŚĆ",
+    "KW KONFEDERACJA WOLNOŚĆ I NIEPODLEGŁOŚĆ",
+    "KKW KOALICJA OBYWATELSKA PO .N IPL ZIELONI",
+    "W POLSKA JEST JEDNA",
+    "KW WYBORCÓW MNIEJSZOŚĆ NIEMIECKA"
+  ),
+  `OKW 1` = c(4, 23, 17, 52, 7, 50, 0, 13),
+  `OKW 2` = c(5, 42, 18, 96, 29, 114, 8, 91),
+  `OKW 3` = c(4, 66, 24, 81, 22, 167, 14, 96),
+  `OKW 4` = c(9, 74, 18, 58, 26, 133, 5, 81),
+  `OKW 5` = c(7, 82, 31, 82, 22, 195, 5, 127),
+  `OKW 6` = c(7, 112, 33, 234, 32, 165, 15, 3),
+  `OKW 7` = c(8, 43, 14, 135, 33, 76, 2, 3),
+  `OKW 8` = c(2, 17, 6, 39, 6, 34, 5, 0),
+  `OKW 9` = c(0, 10, 4, 38, 7, 21, 9, 7),
+  `OKW 10` = c(2, 33, 11, 82, 16, 59, 0, 0),
+  `OKW 11` = c(2, 38, 18, 54, 10, 67, 2, 4)
+)
+```
+
+### Step 3
+
+Next, using `pivot_longer()` function from tidyr I reshaped the data frame from wide format into long format, making it easier for ggplot to process.
+
+```{r}
+results_long <- pivot_longer(results, 
+                            cols = starts_with("OKW"), 
+                            names_to = "OKW", 
+                            values_to = "Głosy")
+```
+
+### Step 4
+
+**In the final step, I made the plots for all the OKWs using the following code:**
+
+-   First, I used the `unique()` function to extract a list of all distinct OKWs from the `wyniki_long` data frame
+
+-   Next, I used a for loop to go through all the OKWs to make a plot for each OKW
+
+-   The `subset()` function filters the long-format data frame (wyniki_long) to include only the rows for one specific OKW
+
+-   using `ggplot()` I created a bar chart, where the x-axis represents the political parties (reordered by the number of votes), and the y-axis shows the number of votes
+
+-   The `coord_flip()` function rotates the bars horizontally for better readibility
+
+-   I also added appropriate labels and used `theme_minimal()` for a clean visual style
+
+-   Finally, I saved each plot as a .jpg file using `ggsave()` function, naming the files based on each OKW.
+
+```{r}
+okw_list <- unique(results_long$OKW)
+
+for (okw in okw_list) {
+  
+  my_data <- subset(results_long, OKW == okw)
+  
+  my_plot <- ggplot(my_data, aes(x = reorder(Partia, Głosy), y = Głosy, fill = Partia)) +
+    geom_bar(stat = "identity") +
+    coord_flip() +
+    labs(
+      title = paste("Wyniki głosowania -", okw),
+      x = "Komitet wyborczy",
+      y = "Liczba głosów"
+    ) +
+    theme_minimal()
+  
+  ggsave(paste0("OKW_plot_", gsub(" ", "_", okw), ".jpg"), plot = my_plot)
+}
+
+```
+
+Here's what the generated plots look like:
+
+![](images/OKW_plot_OKW.1.jpg)
+
+![](images/OKW_plot_OKW.2.jpg)
+
+![](images/OKW_plot_OKW.3.jpg)
+
+![](images/OKW_plot_OKW.4.jpg)
+
+![](images/OKW_plot_OKW.5.jpg)
+
+![](images/OKW_plot_OKW.6.jpg)
+
+![](images/OKW_plot_OKW.7.jpg)
+
+![](images/OKW_plot_OKW.8.jpg)
+
+![](images/OKW_plot_OKW.9.jpg)
+
+![![](images/OKW_plot_OKW.11.jpg)](images/OKW_plot_OKW.10.jpg)
